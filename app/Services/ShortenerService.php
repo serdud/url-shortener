@@ -58,8 +58,7 @@ class ShortenerService
     {
         do {
             $shortCode = Str::random(config('shortening.code_length'));
-            $existingCode = $this->urlModel->getByCode($shortCode);
-            $unique = !$existingCode;
+            $unique = !$this->urlModel->getByCode($shortCode);
         } while (!$unique);
 
         return $shortCode;
