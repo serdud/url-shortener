@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\UniqueCodeException;
 use App\Models\Url;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Cache\Repository as Cache;
 use Illuminate\Support\Str;
 
 class ShortenerService
@@ -15,13 +15,20 @@ class ShortenerService
     private $urlModel;
 
     /**
+     * @var Cache
+     */
+    private $cache;
+
+    /**
      * ShortenerService constructor.
      *
-     * @param Url $urlModel
+     * @param Url   $urlModel
+     * @param Cache $cache
      */
-    public function __construct(Url $urlModel)
+    public function __construct(Url $urlModel, Cache $cache)
     {
         $this->urlModel = $urlModel;
+        $this->cache = $cache;
     }
 
     /**
@@ -47,7 +54,7 @@ class ShortenerService
      */
     public function getUrlByShortCode(string $shortCode): ?string
     {
-        return Cache::remember($shortCode, config('shortening.cache_ttl'), function () use ($shortCode) {
+        return $this->cache->remember($shortCode, config('shortening.cache_ttl'), function () use ($shortCode) {
             return optional($this->urlModel->getByCode($shortCode))->url;
         });
     }
