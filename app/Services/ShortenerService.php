@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\UniqueCodeException;
 use App\Models\Url;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
@@ -53,12 +54,18 @@ class ShortenerService
 
     /**
      * @return string
+     * @throws UniqueCodeException
      */
     private function getShortCode(): string
     {
+        $attempt = 0;
         do {
+            if ($attempt == config('shortening.generation_attempts')) {
+                throw new UniqueCodeException('Attempts limit exceeded. Current limit: '  . config('shortening.generation_attempts'));
+            }
             $shortCode = Str::random(config('shortening.code_length'));
             $unique = !$this->urlModel->getByCode($shortCode);
+            ++$attempt;
         } while (!$unique);
 
         return $shortCode;
